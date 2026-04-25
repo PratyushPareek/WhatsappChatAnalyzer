@@ -111,7 +111,6 @@ A Python tool that reads **any** WhatsApp chat export (`.txt`), extracts insight
 | # | Metric | Notes |
 |---|--------|-------|
 | 8.1 | Deleted messages | Per person count |
-| 8.2 | Longest word | Per person — word-wrap enabled for display |
 
 ---
 
@@ -277,7 +276,7 @@ WAChatAnalysis/
 6. **Section 5** — Media table + unique sticker cards + top sticker tables
 7. **Section 6** — Avg W/M cards + vocabulary cards + top-10 word tables + word clouds
 8. **Section 7** — Conversations card + KV sections (initiator, morning, ghost, consec, questions, laughs) + conversation length table
-9. **Section 8** — Deleted messages + longest word per person
+9. **Section 9** — Deleted messages
 10. **Appendix A** — First messages (full text)
 11. **Appendix B** — Top 3 longest messages per person (full text)
 

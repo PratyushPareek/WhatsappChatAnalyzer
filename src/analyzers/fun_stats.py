@@ -34,14 +34,26 @@ class FunStatsAnalyzer(IAnalyzer):
                 word, count = Counter(filtered).most_common(1)[0]
                 most_used_word[p] = {"word": word, "count": count}
 
-        # 8.3 Longest word used per person
+        # 8.3 Longest word used per person (filter out URLs, filenames, and link fragments)
+        _SKIP_PATTERNS = {"http", "https", "www", "com", "org", "net", "io", "co",
+                          "html", "pdf", "jpg", "png", "webp", "gif", "mp4", "mp3",
+                          "whatsapp", "youtu", "instagram", "facebook", "twitter"}
         longest_word_per_person = {}
         for p in chat.participants:
             best = ""
             for m in text_msgs:
                 if m.sender == p:
                     for w in m.content.split():
+                        # Skip anything that looks like a URL or filepath
+                        w_lower = w.lower()
+                        if any(ind in w_lower for ind in ("http", "www.", "://", ".com", ".org", ".html", ".pdf", ".jpg", ".png")):
+                            continue
                         cleaned = re.sub(r"[^a-zA-Z]", "", w)
+                        if not cleaned or len(cleaned) > 30:
+                            continue
+                        cleaned_lower = cleaned.lower()
+                        if any(ind in cleaned_lower for ind in _SKIP_PATTERNS):
+                            continue
                         if len(cleaned) > len(best):
                             best = cleaned
             if best:
