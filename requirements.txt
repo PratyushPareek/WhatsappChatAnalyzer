@@ -1,0 +1,6 @@
+pandas
+emoji
+matplotlib
+fpdf2
+pyyaml
+wordcloud
