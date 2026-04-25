@@ -77,11 +77,54 @@ class FunStatsAnalyzer(IAnalyzer):
                 "pct": round(caps_count / len(p_text) * 100, 1),
             }
 
+        # 8.5 Manners — messages containing polite words (thank you, sorry, etc.)
+        pattern = r"\b(" + "|".join(self._config.manners_words) + r")\b"
+        _MANNERS_RE = re.compile(pattern, re.IGNORECASE)
+        manners: dict[str, dict] = {}
+        for p in chat.participants:
+            p_text = [m for m in text_msgs if m.sender == p]
+            count = sum(1 for m in p_text if _MANNERS_RE.search(m.content))
+            manners[p] = {
+                "count": count,
+                "pct": round(count / len(p_text) * 100, 1) if p_text else 0.0,
+            }
+
+        # 8.6 Rants — streaks of consecutive messages by one person (≥ 4 in a row, each with ≥ 2 words)
+        _RANT_THRESHOLD = 4
+        rant_counts: dict[str, int] = {p: 0 for p in chat.participants}
+        rant_longest: dict[str, int] = {p: 0 for p in chat.participants}
+        # Only consider messages with at least 2 words
+        rant_msgs = [m for m in user_msgs if len(m.content.split()) >= 2]
+        streak = 1
+        for i in range(1, len(rant_msgs)):
+            if rant_msgs[i].sender == rant_msgs[i - 1].sender:
+                streak += 1
+            else:
+                if streak >= _RANT_THRESHOLD:
+                    sender = rant_msgs[i - 1].sender
+                    rant_counts[sender] += 1
+                    rant_longest[sender] = max(rant_longest[sender], streak)
+                streak = 1
+        # Handle last streak
+        if streak >= _RANT_THRESHOLD:
+            sender = rant_msgs[-1].sender
+            rant_counts[sender] += 1
+            rant_longest[sender] = max(rant_longest[sender], streak)
+
+        rants: dict[str, dict] = {}
+        for p in chat.participants:
+            rants[p] = {
+                "count": rant_counts[p],
+                "longest_streak": rant_longest[p],
+            }
+
         stats = {
             "deleted_messages": deleted_stats,
             "most_used_word": most_used_word,
             "longest_word_per_person": longest_word_per_person,
             "shouting_index": shouting,
+            "manners": manners,
+            "rants": rants,
         }
 
         return AnalysisResult(

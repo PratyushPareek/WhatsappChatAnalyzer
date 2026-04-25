@@ -339,6 +339,17 @@ class PDFReportGenerator(IReportGenerator):
         for p, d in s.get("shouting_index", {}).items():
             self._kv_row(pdf, p, f"{d['count']} messages ({d['pct']}%)")
 
+        self._sub_header(pdf, "Manners (thank you, sorry, please, …)")
+        for p, d in s.get("manners", {}).items():
+            self._kv_row(pdf, p, f"{d['count']} messages ({d['pct']}%)")
+
+        self._sub_header(pdf, "Rants (4+ consecutive messages)")
+        for p, d in s.get("rants", {}).items():
+            if d["count"] > 0:
+                self._kv_row(pdf, p, f"{d['count']} rants (longest: {d['longest_streak']} messages)")
+            else:
+                self._kv_row(pdf, p, "0 rants")
+
     # ─── Appendices ──────────────────────────────────────────────
 
     def _appendices(self, pdf: FPDF, results: list[AnalysisResult]):

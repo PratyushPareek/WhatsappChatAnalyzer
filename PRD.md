@@ -111,6 +111,9 @@ A Python tool that reads **any** WhatsApp chat export (`.txt`), extracts insight
 | # | Metric | Notes |
 |---|--------|-------|
 | 8.1 | Deleted messages | Per person count |
+| 8.2 | Longest word | Per person — word-wrap enabled for display |
+| 8.3 | Manners | Messages containing polite words (thank you, sorry, please, etc.) per person — count + percentage. Keywords configurable via `manners_words` in `config.yaml` |
+| 8.4 | Rants | Streaks of 4+ consecutive messages (each with ≥ 2 words) by one person — count + longest streak per person |
 
 ---
 
@@ -240,6 +243,7 @@ WAChatAnalysis/
 | Key | Default | Description |
 |-----|---------|-------------|
 | `stop_words` | English + Hinglish list | Words excluded from word frequency analysis |
+| `manners_words` | Polite phrases list | Words/phrases counted as manners (regex fragments, e.g. `thank\s?you`) |
 | `conversation_gap_hours` | 15 | Hours of silence that define a new conversation |
 | `min_caps_word_length` | 3 | Min chars for SHOUTING detection |
 | `top_words_count` | 20 | (analyzer-side; HTML shows top 10 per person) |
@@ -276,7 +280,7 @@ WAChatAnalysis/
 6. **Section 5** — Media table + unique sticker cards + top sticker tables
 7. **Section 6** — Avg W/M cards + vocabulary cards + top-10 word tables + word clouds
 8. **Section 7** — Conversations card + KV sections (initiator, morning, ghost, consec, questions, laughs) + conversation length table
-9. **Section 9** — Deleted messages
+9. **Section 8** — Deleted messages + longest word per person
 10. **Appendix A** — First messages (full text)
 11. **Appendix B** — Top 3 longest messages per person (full text)
 

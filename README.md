@@ -105,7 +105,7 @@ python -m src.main
 | 6 | Emoji Analysis | Total/unique emojis, top 5 per person, top 10 overall |
 | 7 | Sticker & Media | Stickers/images/videos/audio/contacts/PDFs, unique stickers, top 5 stickers |
 | 8 | Word & Language | Top 10 words per person, vocabulary size, word clouds |
-| 9 | Miscellaneous | Deleted messages, longest word per person |
+| 9 | Miscellaneous | Deleted messages, longest word per person, manners (polite words), rants (message streaks) |
 
 Plus **Appendix A** (first messages) and **Appendix B** (top 3 longest messages per person).
 
@@ -122,6 +122,12 @@ include_appendix: true        # set to false to skip appendices in the report
 stop_words:                   # add/remove words from frequency analysis
   - hai
   - toh
+  # ...
+manners_words:                # polite words/phrases to count (regex fragments)
+  - "thank\\s?you"
+  - thanks
+  - sorry
+  - please
   # ...
 ```
 

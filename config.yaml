@@ -349,6 +349,32 @@ conversation_gap_hours: 15
 # Minimum word length for SHOUTING detection (all-caps words)
 min_caps_word_length: 3
 
+# Manners keywords — polite words/phrases to count
+# Use \s? for optional spaces, \s for required spaces (regex fragments)
+manners_words:
+  - "thank\\s?you"
+  - thanks
+  - thankyou
+  - thx
+  - ty
+  - tysm
+  - tyvm
+  - sorry
+  - sry
+  - apologies
+  - "my\\s?bad"
+  - mb
+  - please
+  - plz
+  - pls
+  - welcome
+  - yw
+  - np
+  - "no\\s?problem"
+  - "no\\s?worries"
+  - "excuse\\s?me"
+  - pardon
+
 # Word analysis
 top_words_count: 20
 

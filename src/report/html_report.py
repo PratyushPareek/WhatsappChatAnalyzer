@@ -883,12 +883,27 @@ class HTMLReportGenerator(IReportGenerator):
         for p, d in s.get("shouting_index", {}).items():
             shout_kv += self._kv(p, f"{d['count']} messages ({d['pct']}%)")
 
+        manners_kv = ""
+        for p, d in s.get("manners", {}).items():
+            manners_kv += self._kv(p, f"{d['count']} messages ({d['pct']}%)")
+
+        rants_kv = ""
+        for p, d in s.get("rants", {}).items():
+            if d["count"] > 0:
+                rants_kv += self._kv(p, f"{d['count']} rants (longest: {d['longest_streak']} messages)")
+            else:
+                rants_kv += self._kv(p, "0 rants")
+
         return f"""<div class="section">
 <h2>9. Miscellaneous</h2>
 <h3>Deleted Messages</h3>
 {del_kv}
 <h3>Longest Word</h3>
 {lw_html}
+<h3>Manners (thank you, sorry, please, …)</h3>
+{manners_kv}
+<h3>Rants (4+ consecutive messages)</h3>
+{rants_kv}
 </div>"""
 
     # ─── Appendices ──────────────────────────────────────────────

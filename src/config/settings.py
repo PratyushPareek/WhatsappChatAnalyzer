@@ -7,6 +7,13 @@ import yaml
 @dataclass
 class Settings:
     stop_words: list[str] = field(default_factory=list)
+    manners_words: list[str] = field(default_factory=lambda: [
+        r"thank\s?you", "thanks", "thankyou", "thx", "ty", "tysm", "tyvm",
+        "sorry", "sry", "apologies", r"my\s?bad", "mb",
+        "please", "plz", "pls",
+        "welcome", "yw", "np", r"no\s?problem", r"no\s?worries",
+        r"excuse\s?me", "pardon",
+    ])
     conversation_gap_hours: int = 15
     min_caps_word_length: int = 3
     top_words_count: int = 20
@@ -34,6 +41,7 @@ class Settings:
             data = yaml.safe_load(f) or {}
         return cls(
             stop_words=[str(w) for w in data.get("stop_words", [])],
+            manners_words=[str(w) for w in data.get("manners_words", [])] or cls().manners_words,
             conversation_gap_hours=data.get("conversation_gap_hours", 12),
             min_caps_word_length=data.get("min_caps_word_length", 3),
             top_words_count=data.get("top_words_count", 20),
