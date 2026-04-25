@@ -806,7 +806,7 @@ class HTMLReportGenerator(IReportGenerator):
 {init_kv}
 <h3>Morning Texter <span class="info-tip" data-tip="First message of the day after 5 AM">i</span></h3>
 {morning_kv}
-<h3>Left on Read <span class="info-tip" data-tip="Last message before a {self._config.conversation_gap_hours}h+ silence">i</span></h3>
+<h3>Last to Speak <span class="info-tip" data-tip="Who sent the last message before a {self._config.conversation_gap_hours}h+ silence">i</span></h3>
 {ghost_kv}
 <h3>Conversation Length <span class="info-tip" data-tip="Per conversation ({self._config.conversation_gap_hours}h gap = new conversation)">i</span></h3>
 {convo_table}
