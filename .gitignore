@@ -15,6 +15,9 @@ output/
 # Chat data (privacy)
 chats/
 
+# Notes
+NOTES.md
+
 # IDE
 .vscode/
 .idea/
