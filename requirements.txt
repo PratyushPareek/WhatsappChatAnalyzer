@@ -1,6 +1,4 @@
 pandas
 emoji
-matplotlib
-fpdf2
+plotly
 pyyaml
-wordcloud
