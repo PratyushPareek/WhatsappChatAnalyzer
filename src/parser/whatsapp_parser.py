@@ -8,15 +8,25 @@ from src.models.message import Message
 from src.parser.base import IChatParser
 
 # Regex: date, time, separator, then rest of line
-_LINE_RE = re.compile(
+# Format A: 1/23/25, 4:56 PM - Sender: message
+_LINE_RE_A = re.compile(
     r"^(\d{1,2}/\d{1,2}/\d{2,4}),\s"        # date
     r"(\d{1,2}:\d{2}[\s\u202f][APap][Mm])"    # time (space or narrow-no-break-space before AM/PM)
     r"\s-\s"                                   # separator
     r"(.+)$"                                   # rest
 )
 
+# Format B: [14/07/25, 16:33:03] Sender: message  (may have U+200E prefix)
+_LINE_RE_B = re.compile(
+    r"^\u200e?\[(\d{1,2}/\d{1,2}/\d{2,4}),\s"   # optional LTR mark + [ + date
+    r"(\d{1,2}:\d{2}:\d{2})\]\s"                 # 24h time with seconds + ]
+    r"(.+)$"                                      # rest
+)
+
 _MEDIA_OMITTED = "<Media omitted>"
 _FILE_ATTACHED_RE = re.compile(r"^(.+)\s\(file attached\)$")
+# Format B uses "X omitted" (with optional U+200E prefix)
+_OMITTED_RE = re.compile(r"^\u200e?(sticker|image|video|audio|document|GIF|Contact card) omitted$")
 _MEDIA_PREFIX_MAP = {
     "STK": "sticker",
     "IMG": "image",
@@ -41,6 +51,7 @@ class WhatsAppParser(IChatParser):
         path = Path(file_path)
         lines = path.read_text(encoding="utf-8").splitlines()
 
+        self._line_re = self._detect_format(lines)
         date_format = self._config.date_format or self._detect_date_format(lines)
         raw_messages = self._extract_raw_messages(lines)
         messages = [self._build_message(r, date_format) for r in raw_messages]
@@ -61,7 +72,7 @@ class WhatsAppParser(IChatParser):
     def _extract_raw_messages(self, lines: list[str]) -> list[dict]:
         raw: list[dict] = []
         for line in lines:
-            m = _LINE_RE.match(line)
+            m = self._line_re.match(line)
             if m:
                 date_str, time_str, rest = m.group(1), m.group(2), m.group(3)
                 # Try to split sender: message
@@ -92,7 +103,7 @@ class WhatsAppParser(IChatParser):
 
     def _build_message(self, raw: dict, date_format: str) -> Message:
         dt = self._parse_datetime(raw["date"], raw["time"], date_format)
-        content = raw["content"]
+        content = raw["content"].lstrip("\u200e")
         is_system = raw["is_system"]
 
         is_media, media_type = self._detect_media(content)
@@ -124,17 +135,31 @@ class WhatsAppParser(IChatParser):
         if year < 100:
             year += 2000
 
-        # Parse time
+        # Parse time — 12h (AM/PM) or 24h (HH:MM:SS)
         time_str = time_str.strip()
-        t = datetime.strptime(time_str, "%I:%M %p")
-        return datetime(year, month, day, t.hour, t.minute)
+        if ":" in time_str and time_str.count(":") == 2:
+            # 24-hour format: HH:MM:SS
+            t = datetime.strptime(time_str, "%H:%M:%S")
+        else:
+            # 12-hour format: H:MM AM/PM
+            t = datetime.strptime(time_str, "%I:%M %p")
+        return datetime(year, month, day, t.hour, t.minute, t.second)
+
+    def _detect_format(self, lines: list[str]) -> re.Pattern:
+        """Detect whether the file uses format A (AM/PM) or format B (brackets, 24h)."""
+        for line in lines[:50]:
+            if _LINE_RE_A.match(line):
+                return _LINE_RE_A
+            if _LINE_RE_B.match(line):
+                return _LINE_RE_B
+        return _LINE_RE_A  # default
 
     def _detect_date_format(self, lines: list[str]) -> str:
         """Auto-detect MDY vs DMY by scanning date fields for values > 12."""
         first_fields = []
         second_fields = []
         for line in lines[:500]:
-            m = _LINE_RE.match(line)
+            m = self._line_re.match(line)
             if m:
                 parts = m.group(1).split("/")
                 first_fields.append(int(parts[0]))
@@ -154,6 +179,20 @@ class WhatsAppParser(IChatParser):
         content = content.strip()
         if content == _MEDIA_OMITTED:
             return True, "unknown"
+
+        # Format B: "sticker omitted", "image omitted", etc.
+        om = _OMITTED_RE.match(content)
+        if om:
+            _omitted_type_map = {
+                "sticker": "sticker",
+                "image": "image",
+                "video": "video",
+                "audio": "audio",
+                "document": "document",
+                "GIF": "image",
+                "Contact card": "contact",
+            }
+            return True, _omitted_type_map.get(om.group(1), "unknown")
 
         m = _FILE_ATTACHED_RE.match(content)
         if m:

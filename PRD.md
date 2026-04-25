@@ -217,13 +217,16 @@ WAChatAnalysis/
 
 ## Parsing Rules
 
-1. **Message line regex**: `^(\d{1,2}/\d{1,2}/\d{2,4}),\s(\d{1,2}:\d{2}[\s\u202f][APap][Mm])\s-\s`
-2. **User message**: matches regex AND has `: ` after sender name
+1. **Two message line formats** (auto-detected):
+   - **Format A**: `M/D/YY, H:MM AM/PM - Sender: message` (12h, dash separator)
+   - **Format B**: `[DD/MM/YY, HH:MM:SS] Sender: message` (24h, square brackets, optional U+200E prefix)
+2. **User message**: matches either regex AND has `: ` after sender name
 3. **System message**: matches regex but no `: ` sender pattern
 4. **Multi-line message**: does NOT match regex → append to previous message
 5. **Participant detection**: auto-extracted from unique sender names
 6. **Media detection**:
    - `<Media omitted>` → `media_type = unknown`
+   - `sticker omitted` / `image omitted` / `video omitted` / `audio omitted` / `GIF omitted` / `Contact card omitted` → respective type (Format B)
    - `STK-*.webp (file attached)` → `sticker`
    - `IMG-*.jpg (file attached)` → `image`
    - `VID-* (file attached)` → `video`
@@ -233,7 +236,7 @@ WAChatAnalysis/
    - `*.pdf (file attached)` → `pdf`
 7. **Deleted**: `This message was deleted` or `You deleted this message`
 8. **Missed calls**: `Missed voice call` or `Missed video call`
-9. **Encoding**: handles both regular space and `\u202F` (narrow no-break space) before AM/PM
+9. **Encoding**: handles both regular space and `\u202F` (narrow no-break space) before AM/PM; strips `\u200E` (left-to-right mark) from Format B lines
 10. **Date format**: auto-detects `M/D/YY` (US) vs `D/M/YY` (international); configurable override
 
 ---
