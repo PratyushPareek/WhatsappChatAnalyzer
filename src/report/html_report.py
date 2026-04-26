@@ -432,7 +432,9 @@ tr:hover td {
   font-weight: 400;
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-sm);
-  white-space: nowrap;
+  white-space: normal;
+  max-width: 300px;
+  width: max-content;
   z-index: 10;
   pointer-events: none;
 }
@@ -692,6 +694,7 @@ class HTMLReportGenerator(IReportGenerator):
 <h3>Top 5 Most Active Hours</h3>
 <table><tr><th>Date</th><th>Hour</th><th>Messages</th></tr>{active_hour_rows}</table>
 {self._charts_html(charts)}
+<p style="font-size:var(--text-xs); color:var(--color-text-muted); margin-top:calc(-1 * var(--space-3)); margin-bottom:var(--space-4);"><span class="info-tip" data-tip="Distribution of how many messages are sent per day (excluding days with 0 messages). The curve is a kernel density estimate (KDE).">i</span> Daily message count distribution (zero-message days excluded)</p>
 <h3>Response Time <span class="info-tip" data-tip="Only replies within {self._config.conversation_gap_hours}h are counted">i</span></h3>
 {response_html}
 </div>"""
@@ -882,7 +885,7 @@ class HTMLReportGenerator(IReportGenerator):
         if happiest_month:
             hm_card = self._stat_card("Happiest Month", happiest_month["month"], f"{happiest_month['count']} happy messages")
 
-        tip = '<span class="info-tip" data-tip="Counted by happy/laughing keywords + emojis. Only days in the 25th–75th percentile of message volume are included.">i</span>'
+        tip = '<span class="info-tip" data-tip="Counted by happy/laughing keywords + emojis. Only days in the 25th–75th percentile of daily message volume are included.">i</span>'
 
         return f"""<div class="section">
 <h2>5. Happiness Analysis {tip}</h2>
@@ -900,16 +903,16 @@ class HTMLReportGenerator(IReportGenerator):
         for i, m in enumerate(moments, 1):
             rows += f"""<tr>
 <td>{i}</td>
-<td>{self._e(m['date'])}<br><span style="font-size:var(--text-xs); color:var(--color-text-muted);">{self._e(m['time'])}</span></td>
+<td>{self._e(m['date'])}</td>
 <td>{m['messages']}</td>
 <td>{m['score']}</td>
-<td>{m['density']}%</td>
+<td>{m['happiness_index']}</td>
 </tr>"""
 
-        tip = f'<span class="info-tip" data-tip="Conversations with 5+ messages, ranked by density of happy indicators">i</span>'
-        return f"""<h3>Happiest Moments {tip}</h3>
+        tip = f'<span class="info-tip" data-tip="Ranked by happy_count / total^0.1 — rewards more happy messages but softly penalizes longer days. Only days above the 75th percentile in message count are included. First 2 messages of each day in Appendix D.">i</span>'
+        return f"""<h3>Happiest Days {tip}</h3>
 <table>
-<tr><th>#</th><th>Date</th><th>Messages</th><th>Happy Score</th><th>Density</th></tr>
+<tr><th>#</th><th>Date</th><th>Messages</th><th>Happy Count</th><th>Index</th></tr>
 {rows}
 </table>"""
 
@@ -967,6 +970,7 @@ class HTMLReportGenerator(IReportGenerator):
         first_messages = {}
         longest_messages = {}
         longest_rants = {}
+        happiest_previews = []
         for r in results:
             if r.appendix:
                 if "first_messages" in r.appendix:
@@ -975,10 +979,13 @@ class HTMLReportGenerator(IReportGenerator):
                     longest_messages = r.appendix["longest_messages"]
                 if "longest_rants" in r.appendix:
                     longest_rants = r.appendix["longest_rants"]
+                if "happiest_previews" in r.appendix:
+                    happiest_previews = r.appendix["happiest_previews"]
 
         parts = []
 
-        if first_messages or longest_messages or longest_rants:
+        has_appendix = first_messages or longest_messages or longest_rants or happiest_previews
+        if has_appendix:
             parts.append('<div class="appendix-caution"><div class="appendix-caution-icon">⚠️</div><div class="appendix-caution-text"><strong>Caution:</strong> Actual messages from your chat appear below.</div></div>')
 
         if first_messages:
@@ -1010,5 +1017,18 @@ class HTMLReportGenerator(IReportGenerator):
                 items += f"""<h3>{self._e(p)}</h3>
 <div class="rant-chat">{bubbles}</div>"""
             parts.append(f'<div class="section"><h2>Appendix C: Longest Rant (First 2 Messages)</h2>{items}</div>')
+
+        if happiest_previews:
+            items = ""
+            for idx, convo_msgs in enumerate(happiest_previews, 1):
+                bubbles = ""
+                for d in convo_msgs:
+                    bubbles += f"""<div class="rant-bubble">
+<span class="rant-time">{self._e(d['sender'])} — {d['date']} at {d['time']}</span>
+{self._e(d['content'][:3000])}
+</div>"""
+                items += f"""<h3>#{idx}</h3>
+<div class="rant-chat">{bubbles}</div>"""
+            parts.append(f'<div class="section"><h2>Appendix D: Happiest Days (First 2 Messages)</h2>{items}</div>')
 
         return "\n".join(parts)

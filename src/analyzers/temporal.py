@@ -176,6 +176,12 @@ class TemporalAnalyzer(IAnalyzer):
                 "data": dict(sorted(month_counts.items())),
                 "kwargs": {"xlabel": "Month", "ylabel": "Messages"},
             },
+            "daily_dist": {
+                "type": "histogram_kde",
+                "title": "Daily Message Count Distribution",
+                "data": {"values": sorted(combined_day_counts.values())},
+                "kwargs": {"xlabel": "Messages in a Day", "ylabel": "Number of Days"},
+            },
         }
 
         return AnalysisResult(

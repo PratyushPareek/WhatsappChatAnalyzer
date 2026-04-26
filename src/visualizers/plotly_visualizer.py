@@ -74,6 +74,59 @@ class PlotlyVisualizer(IVisualizer):
         fig.update_layout(**layout)
         return fig.to_html(full_html=False, include_plotlyjs=False)
 
+    def _histogram_kde(self, data: dict, title: str, **kwargs) -> str:
+        import math
+        values = list(data.get("values", []))
+        if not values:
+            return ""
+
+        # Build histogram buckets
+        min_v, max_v = min(values), max(values)
+        n_bins = 50
+        bin_width = max(1, (max_v - min_v) / n_bins)
+        edges = [min_v + i * bin_width for i in range(n_bins + 1)]
+        counts = [0] * n_bins
+        for v in values:
+            idx = min(int((v - min_v) / bin_width), n_bins - 1)
+            counts[idx] += 1
+        bin_centers = [(edges[i] + edges[i + 1]) / 2 for i in range(n_bins)]
+
+        fig = go.Figure()
+        fig.add_trace(go.Bar(
+            x=[round(c) for c in bin_centers], y=counts,
+            marker_color=_ACCENT,
+            marker_line=dict(width=0),
+            opacity=0.5,
+            name="Days",
+            width=bin_width * 0.9,
+        ))
+
+        # KDE curve (Gaussian kernel)
+        n = len(values)
+        std = (sum((v - sum(values) / n) ** 2 for v in values) / n) ** 0.5
+        bw = 1.06 * std * n ** (-0.2)  # Silverman's rule
+        if bw > 0:
+            x_kde = [min_v + i * (max_v - min_v) / 200 for i in range(201)]
+            y_kde = []
+            for x in x_kde:
+                density = sum(math.exp(-0.5 * ((x - v) / bw) ** 2) for v in values) / (n * bw * math.sqrt(2 * math.pi))
+                y_kde.append(density * n * bin_width)  # scale to match histogram counts
+            fig.add_trace(go.Scatter(
+                x=x_kde, y=y_kde, mode="lines",
+                line=dict(color=self._colors[1], width=2.5, shape="spline"),
+                name="Density",
+            ))
+
+        layout = self._base_layout(title, **kwargs)
+        layout["bargap"] = 0.05
+        layout["showlegend"] = True
+        layout["legend"] = dict(
+            font=dict(family="DM Sans, sans-serif", size=11, color=_TEXT_MUTED),
+            bgcolor="rgba(0,0,0,0)",
+        )
+        fig.update_layout(**layout)
+        return fig.to_html(full_html=False, include_plotlyjs=False)
+
     def _wordcloud(self, data: dict, title: str, **kwargs) -> str:
         if not data:
             return ""

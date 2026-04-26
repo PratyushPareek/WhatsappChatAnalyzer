@@ -57,7 +57,8 @@ A Python tool that reads **any** WhatsApp chat export (`.txt`), extracts insight
 | 3.6 | Top 5 most active hours | Combined (date + hour + count table) |
 | 3.7 | Longest streak | Days count + date range (start — end) |
 | 3.8 | Longest silence | Days + hours + date range (from — to) |
-| 3.9 | Response time | Comparison table per person: median, 25th percentile, 75th percentile, replies ≤ 1 min. ⓘ tooltip: "Only replies within 24 hours are counted" |
+| 3.9 | Response time | Comparison table per person: median, 25th percentile, 75th percentile, replies ≤ 1 min. ⓘ tooltip: "Only replies within {conversation_gap_hours}h are counted" |
+| 3.10 | Daily message count distribution | Histogram (50 bins) + KDE curve. Shows how many days had N messages (excludes zero-message days). ⓘ tooltip explains distribution |
 
 ---
 
@@ -106,14 +107,24 @@ A Python tool that reads **any** WhatsApp chat export (`.txt`), extracts insight
 
 ---
 
-### 8. Miscellaneous
+### 8. Happiness Analysis
 
 | # | Metric | Notes |
 |---|--------|-------|
-| 8.1 | Deleted messages | Per person count |
-| 8.2 | Longest word | Per person — word-wrap enabled for display |
-| 8.3 | Manners | Messages containing polite words (thank you, sorry, please, etc.) per person — count + percentage. Keywords configurable via `manners_words` in `config.yaml` |
-| 8.4 | Rants | Streaks of 4+ consecutive messages (each with ≥ 2 words) by one person — count + longest streak per person |
+| 8.1 | Happy message count | Per person (count + %). Uses keyword + emoji matching. ⓘ tooltip: "Only days in the 25th–75th percentile of daily message volume are included" |
+| 8.2 | Happiest month | Month with highest happy-message density (happy/total) |
+| 8.3 | Happiest days | Top 5 days ranked by `happy_count / total^0.1` (10th root penalty). Only days above the 75th percentile in message count are included. First 2 messages of each in **Appendix D**. ⓘ tooltip explains formula |
+
+---
+
+### 9. Miscellaneous
+
+| # | Metric | Notes |
+|---|--------|-------|
+| 9.1 | Deleted messages | Per person count |
+| 9.2 | Longest word | Per person — word-wrap enabled for display |
+| 9.3 | Manners | Messages containing polite words (thank you, sorry, please, etc.) per person — count + percentage. Keywords configurable via `manners_words` in `config.yaml` (regex fragments, e.g. `th(?:a|e)nk\s?(?:you|u|ss*)`) |
+| 9.4 | Rants | Streaks of 4+ consecutive messages (each with ≥ 2 words, within 2 min of each other) by one person — count + longest streak per person + date reference. Short fillers (≤3 chars) are ignored without breaking streaks. ⓘ tooltip explains criteria |
 
 ---
 
@@ -121,8 +132,11 @@ A Python tool that reads **any** WhatsApp chat export (`.txt`), extracts insight
 
 | Appendix | Content |
 |----------|---------|
+| **Caution banner** | Shown at the top of appendices: "Actual messages from your chat appear below" (amber caution UI) |
 | **A** | First message sent by each participant (full text) |
 | **B** | Top 3 longest messages per participant (full text, numbered) |
+| **C** | Longest rant per person — first 2 messages shown as chat bubbles |
+| **D** | Happiest days — first 2 messages of each top-5 day shown as chat bubbles |
 
 ---
 
@@ -249,7 +263,7 @@ WAChatAnalysis/
 | `manners_words` | Polite phrases list | Words/phrases counted as manners (regex fragments, e.g. `thank\s?you`) |
 | `conversation_gap_hours` | 15 | Hours of silence that define a new conversation |
 | `min_caps_word_length` | 3 | Min chars for SHOUTING detection |
-| `top_words_count` | 20 | (analyzer-side; HTML shows top 10 per person) |
+
 | `top_emojis_per_person` | 5 | Top N emojis shown per person |
 | `top_emojis_overall` | 10 | Top N emojis shown overall |
 | `date_format` | `null` (auto) | Force `MDY` or `DMY` |
@@ -278,14 +292,17 @@ WAChatAnalysis/
 1. **Cover** — title, participants, date range
 2. **Section 1** — Summary sentence + stat cards + KV rows
 3. **Section 2** — Per-person table + longest messages comparison table
-4. **Section 3** — Stat cards (streak/silence) + tables (top days/hours) + response time table + 4 Plotly charts
+4. **Section 3** — Stat cards (streak/silence) + tables (top days/hours) + response time table + 5 Plotly charts (incl. daily distribution histogram + KDE)
 5. **Section 4** — Emoji stat cards + top emoji lists
 6. **Section 5** — Media table + unique sticker cards + top sticker tables
 7. **Section 6** — Avg W/M cards + vocabulary cards + top-10 word tables + word clouds
 8. **Section 7** — Conversations card + KV sections (initiator, morning, ghost, consec, questions, laughs) + conversation length table
-9. **Section 8** — Deleted messages + longest word per person
-10. **Appendix A** — First messages (full text)
-11. **Appendix B** — Top 3 longest messages per person (full text)
+9. **Section 8** — Deleted messages + longest word per person + manners + rants
+10. **Appendix caution banner** — Warns that actual messages appear below
+11. **Appendix A** — First messages (full text)
+12. **Appendix B** — Top 3 longest messages per person (full text)
+13. **Appendix C** — Longest rant per person (first 2 messages, chat-bubble UI)
+14. **Appendix D** — Happiest days (first 2 messages per top-5 day, chat-bubble UI)
 
 All sections include ⓘ info tooltips where configurable assumptions are used.
 

@@ -99,15 +99,15 @@ python -m src.main
 |---|---------|-----------|
 | 1 | Overview & Basic Stats | Total messages/words/chars, active days/weeks %, summary sentence |
 | 2 | Per-Person Breakdown | Message/word/char counts, top 3 longest messages (comparison table) |
-| 3 | Temporal Analysis | Weekly/monthly trends, hourly/daily charts, streak, silence, response time |
+| 3 | Temporal Analysis | Weekly/monthly trends, hourly/daily charts, daily message distribution (histogram + KDE), streak, silence, response time |
 | 4 | Conversation Dynamics | Initiator, morning texter, left on read, conversation length, questions, laughs |
-| 5 | Happiness Analysis | Happy message count, happiest month, top 5 happiest moments |
+| 5 | Happiness Analysis | Happy message count, happiest month, top 5 happiest days (ranked by index) |
 | 6 | Emoji Analysis | Total/unique emojis, top 5 per person, top 10 overall |
 | 7 | Sticker & Media | Stickers/images/videos/audio/contacts/PDFs, unique stickers, top 5 stickers |
 | 8 | Word & Language | Top 10 words per person, vocabulary size, word clouds |
-| 9 | Miscellaneous | Deleted messages, longest word per person, manners (polite words), rants (message streaks) |
+| 9 | Miscellaneous | Deleted messages, longest word per person, manners (polite words), rants (consecutive message streaks) |
 
-Plus **Appendix A** (first messages) and **Appendix B** (top 3 longest messages per person).
+Plus **Appendix A** (first messages), **Appendix B** (top 3 longest messages), **Appendix C** (longest rant — first 2 messages as chat bubbles), and **Appendix D** (happiest days — first 2 messages as chat bubbles).
 
 ## Configuration
 

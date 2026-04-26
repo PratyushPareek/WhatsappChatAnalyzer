@@ -39,7 +39,7 @@ chart_style:
 
 # Manners keywords — polite words/phrases to count (regex fragments)
 manners_words:
-  - "th(?:a|e)nk\\s?(?:you|u|s)"
+  - "th(?:a|e)nk\\s?(?:you|u|ss*)"
   - "th(?:a|e)?nx"
   - thx
   - thnx

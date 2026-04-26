@@ -40,7 +40,8 @@ WAChatAnalysis/
 │   │   ├── media.py                # Section 5: sticker & media analysis
 │   │   ├── word_analysis.py        # Section 6: word & language analysis
 │   │   ├── dynamics.py             # Section 7: conversation dynamics
-│   │   └── fun_stats.py            # Section 8: fun & novelty stats
+│   │   ├── happiness.py           # Section 8: happiness analysis
+│   │   └── fun_stats.py           # Section 9: fun & novelty stats
 │   │
 │   ├── visualizers/                # Chart generation layer
 │   │   ├── __init__.py
@@ -161,12 +162,13 @@ class IAnalyzer(ABC):
 |-------|---------|------------|
 | `BasicStatsAnalyzer` | 1 | total msgs, words, chars, date range, active days |
 | `PerPersonAnalyzer` | 2 | per-person msg/word/char counts, longest message |
-| `TemporalAnalyzer` | 3 | weekly/hourly/daily/monthly aggregations, streaks, response times |
+| `TemporalAnalyzer` | 3 | weekly/hourly/daily/monthly aggregations, streaks, response times, daily msg count distribution |
 | `EmojiAnalyzer` | 4 | emoji counts, top emojis, monthly trend data |
-| `MediaAnalyzer` | 5 | sticker/image/video/audio counts, media-to-text ratio |
+| `MediaAnalyzer` | 5 | sticker/image/video/audio counts, unique stickers |
 | `WordAnalyzer` | 6 | top words, word cloud data, vocab size |
 | `DynamicsAnalyzer` | 7 | initiator counts, consecutive msgs, questions, laughs |
-| `FunStatsAnalyzer` | 8 | deleted msgs, longest word, shouting index |
+| `HappinessAnalyzer` | 8 | happy message counts, happiest month, happiest days (day-based, `count/n^0.1` index) |
+| `FunStatsAnalyzer` | 9 | deleted msgs, longest word, manners, rants (temporal contiguity, filler skip) |
 
 **Principle**: Single Responsibility — each analyzer does one thing. Interface Segregation — analyzers don't need to know about charts or PDFs. New sections = new analyzer class, no changes to existing ones (Open/Closed).
 
@@ -194,6 +196,7 @@ class MatplotlibVisualizer(IVisualizer):
     def _line_chart(self, data, title, **kwargs) -> str: ...
     def _bar_chart(self, data, title, **kwargs) -> str: ...
     def _histogram(self, data, title, **kwargs) -> str: ...
+    def _histogram_kde(self, data, title, **kwargs) -> str:  # histogram + KDE curve
     def _word_cloud(self, data, title, **kwargs) -> str: ...
 ```
 
@@ -238,7 +241,7 @@ class PDFReportGenerator(IReportGenerator):
 @dataclass
 class Settings:
     stop_words: list[str]
-    conversation_gap_hours: int        # default 12
+    conversation_gap_hours: int        # default 15
     min_caps_word_length: int          # default 3 (for SHOUTING detection)
     top_words_count: int               # default 20
     top_emojis_per_person: int         # default 5
@@ -330,6 +333,7 @@ def main():
         MediaAnalyzer(config),
         WordAnalyzer(config),
         DynamicsAnalyzer(config),
+        HappinessAnalyzer(config),
         FunStatsAnalyzer(config),
     ]
     visualizer = MatplotlibVisualizer(output_dir="output/charts", style=config.chart_style)
@@ -373,7 +377,7 @@ def main():
                               IReportGenerator.generate()
                                            │
                                            ▼
-                                      report.pdf
+                                      report.html
 ```
 
 ---

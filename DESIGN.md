@@ -220,8 +220,9 @@ Use warm-tinted RGBA `(44, 42, 40)` — never pure black shadows.
 - `cursor: help`, `border-radius: var(--radius-full)`
 - Hover shows `::after` pseudo-element with `data-tip` attribute
 - Tooltip: `--color-text` background, `--color-surface` text, `--text-xs`, `--radius-sm`
-- Positioned above the icon, centered, `white-space: nowrap`
-- Used on: Appendix references, config-dependent metrics (gap hours, response time threshold)
+- Positioned above the icon, centered
+- `white-space: normal`, `max-width: 300px`, `width: max-content` — long tooltips wrap instead of overflowing
+- Used on: Appendix references, config-dependent metrics (gap hours, response time threshold), formula explanations
 
 ### Comparison Tables
 - Used for: longest messages (Section 2), response time (Section 3), conversation length (Section 7)
@@ -237,6 +238,20 @@ Use warm-tinted RGBA `(44, 42, 40)` — never pure black shadows.
 ### Long Words
 - `.word-wrap` class: `word-break: break-all; overflow-wrap: break-word`
 - Used for longest word display in Miscellaneous section
+
+### Appendix Caution Banner
+- Amber/yellow warning banner at the top of appendices
+- Flexbox layout: icon (1.4rem) + text
+- Background: `#fef3c7`, border: `1px solid #f59e0b`, left border: `4px solid #f59e0b`
+- Text color: `#92400e`, font-weight 600 for "Caution:" label
+- Appears only when at least one appendix section exists
+
+### Chat Bubbles (Rant/Happiness Appendix)
+- Used in Appendix C (rants) and D (happiest days) to show first 2 messages
+- Container: `.rant-chat` — flexbox column, `gap: var(--space-2)`, max-height 400px with scroll
+- Bubble: `.rant-bubble` — `--color-bg-warm` background, border, left-aligned with rounded corners (flat bottom-left)
+- Timestamp: `.rant-time` — 0.7rem, `--color-text-muted`, block display above content
+- Max-width: 85%, pre-wrap, word-break
 
 ---
 

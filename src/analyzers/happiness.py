@@ -1,6 +1,6 @@
 import re
-from collections import Counter
-from datetime import datetime, timedelta
+from collections import Counter, defaultdict
+from datetime import datetime
 
 import emoji as emoji_lib
 
@@ -91,40 +91,49 @@ class HappinessAnalyzer(IAnalyzer):
                 "density": density,
             }
 
-        # Happiest moments — score each conversation by happy+love density
-        gap = timedelta(hours=self._config.conversation_gap_hours)
-        conversations: list[list] = []
-        convo: list = [user_msgs[0]] if user_msgs else []
-        for i in range(1, len(user_msgs)):
-            if user_msgs[i].datetime - user_msgs[i - 1].datetime >= gap:
-                conversations.append(convo)
-                convo = []
-            convo.append(user_msgs[i])
-        if convo:
-            conversations.append(convo)
+        # Happiest days — group messages by date and score each day
+        days: dict[str, list] = defaultdict(list)
+        for m in user_msgs:
+            days[m.datetime.date()].append(m)
 
-        scored_convos = []
-        for convo_msgs in conversations:
-            if len(convo_msgs) < 5:
-                continue
+        # Filter out days below 75th percentile message count
+        if days:
+            day_lens = sorted(len(v) for v in days.values())
+            p75 = day_lens[(3 * len(day_lens)) // 4]
+            days = {d: msgs for d, msgs in days.items() if len(msgs) >= p75}
+
+        scored_days = []
+        for date_key, day_msgs in days.items():
             score = 0
-            for m in convo_msgs:
+            for m in day_msgs:
                 content_emojis = set(m.content)
                 if bool(_HAPPY_WORDS.search(m.content)) or bool(_HAPPY_EMOJIS & content_emojis):
                     score += 1
-            density = score / len(convo_msgs)
-            scored_convos.append({
-                "date": convo_msgs[0].datetime.strftime("%B %d, %Y"),
-                "time": convo_msgs[0].datetime.strftime("%I:%M %p"),
-                "messages": len(convo_msgs),
+            n = len(day_msgs)
+            happiness_index = score / (n ** 0.1)
+            first_msgs = []
+            for fm in day_msgs[:2]:
+                first_msgs.append({
+                    "sender": fm.sender,
+                    "date": fm.datetime.strftime("%B %d, %Y"),
+                    "time": fm.datetime.strftime("%I:%M %p"),
+                    "content": fm.content,
+                })
+            scored_days.append({
+                "date": day_msgs[0].datetime.strftime("%B %d, %Y"),
+                "messages": n,
                 "score": score,
-                "density": round(density * 100, 1),
-                "preview": convo_msgs[0].content[:80],
-                "sender": convo_msgs[0].sender,
+                "happiness_index": round(happiness_index, 2),
+                "first_msgs": first_msgs,
             })
 
-        scored_convos.sort(key=lambda x: x["density"], reverse=True)
-        happiest_moments = scored_convos[:5]
+        scored_days.sort(key=lambda x: x["happiness_index"], reverse=True)
+        happiest_moments = scored_days[:5]
+
+        # Collect first 2 messages from each top-5 happiest day for appendix
+        happiest_previews = []
+        for sc in happiest_moments:
+            happiest_previews.append(sc["first_msgs"])
 
         stats = {
             "per_person": per_person,
@@ -138,4 +147,5 @@ class HappinessAnalyzer(IAnalyzer):
             section_id="happiness",
             title="Happiness Analysis",
             stats=stats,
+            appendix={"happiest_previews": happiest_previews} if happiest_previews else None,
         )
