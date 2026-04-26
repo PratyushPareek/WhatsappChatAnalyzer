@@ -94,14 +94,14 @@ class TemporalAnalyzer(IAnalyzer):
         gap_hours = longest_gap.seconds // 3600
 
         # 3.9 Response time per person
+        _MAX_RESPONSE_SECS = self._config.conversation_gap_hours * 3600
         response_times = {p: [] for p in chat.participants}
         for i in range(1, len(user_msgs)):
             curr = user_msgs[i]
             prev = user_msgs[i - 1]
             if curr.sender != prev.sender and curr.sender in response_times:
                 delta = (curr.datetime - prev.datetime).total_seconds()
-                # Only count responses within 24 hours as meaningful replies
-                if 0 < delta <= 86400:
+                if 0 < delta <= _MAX_RESPONSE_SECS:
                     response_times[curr.sender].append(delta)
 
         response_stats = {}

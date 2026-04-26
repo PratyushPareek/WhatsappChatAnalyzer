@@ -1,5 +1,64 @@
 # WAChatAnalysis Configuration
 
+# Directories
+output_dir: output
+chats_dir: chats
+
+# Date format: null = auto-detect, "MDY" or "DMY"
+date_format: null
+
+# Conversation gap threshold (hours) — messages after this gap count as a new conversation
+conversation_gap_hours: 15
+
+# Minimum word length for SHOUTING detection (all-caps words)
+min_caps_word_length: 3
+
+# Emoji analysis
+top_emojis_per_person: 5
+top_emojis_overall: 10
+
+# Include appendices (first messages + longest messages full text)
+include_appendix: true
+
+# Chart styling
+chart_style:
+  figure_width: 10
+  figure_height: 6
+  color_palette:
+    - "#4C72B0"
+    - "#DD8452"
+    - "#55A868"
+    - "#C44E52"
+    - "#8172B3"
+    - "#937860"
+    - "#DA8BC3"
+    - "#8C8C8C"
+  font_size: 12
+  title_size: 14
+  dpi: 150
+
+# Manners keywords — polite words/phrases to count (regex fragments)
+manners_words:
+  - "th(?:a|e)nk\\s?(?:you|u|s)"
+  - "th(?:a|e)?nx"
+  - thx
+  - thnx
+  - ty(?:sm|vm)?
+  - "so+r+[yi]+"
+  - sry
+  - apologies
+  - "my\\s?bad"
+  - mb
+  - "pl(?:ea|i)?s(?:e)?"
+  - plz
+  - welcome
+  - wlcm
+  - yw
+  - np
+  - "no\\s?(?:problem|worries)"
+  - "(?:e?x|x)cu[sz]e\\s?me"
+  - pardon
+
 # Stop words to exclude from word frequency analysis
 # Includes English + Hinglish common words
 stop_words:
@@ -342,69 +401,3 @@ stop_words:
   - hain
   - rhe
   - maine
-
-# Conversation gap threshold (hours) — messages after this gap count as a new conversation
-conversation_gap_hours: 15
-
-# Minimum word length for SHOUTING detection (all-caps words)
-min_caps_word_length: 3
-
-# Manners keywords — polite words/phrases to count
-# Use \s? for optional spaces, \s for required spaces (regex fragments)
-manners_words:
-  - "thank\\s?you"
-  - thanks
-  - thankyou
-  - thx
-  - ty
-  - tysm
-  - tyvm
-  - sorry
-  - sry
-  - apologies
-  - "my\\s?bad"
-  - mb
-  - please
-  - plz
-  - pls
-  - welcome
-  - yw
-  - np
-  - "no\\s?problem"
-  - "no\\s?worries"
-  - "excuse\\s?me"
-  - pardon
-
-# Word analysis
-top_words_count: 20
-
-# Emoji analysis
-top_emojis_per_person: 5
-top_emojis_overall: 10
-
-# Date format: null = auto-detect, "MDY" or "DMY"
-date_format: null
-
-# Chart styling
-chart_style:
-  figure_width: 10
-  figure_height: 6
-  color_palette:
-    - "#4C72B0"
-    - "#DD8452"
-    - "#55A868"
-    - "#C44E52"
-    - "#8172B3"
-    - "#937860"
-    - "#DA8BC3"
-    - "#8C8C8C"
-  font_size: 12
-  title_size: 14
-  dpi: 150
-
-# Directories
-output_dir: output
-chats_dir: chats
-
-# Include appendices (first messages + longest messages full text)
-include_appendix: true

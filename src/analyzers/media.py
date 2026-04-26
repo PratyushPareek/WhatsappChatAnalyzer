@@ -12,17 +12,12 @@ class MediaAnalyzer(IAnalyzer):
     def analyze(self, chat: Chat) -> AnalysisResult:
         user_msgs = [m for m in chat.messages if not m.is_system]
         media_msgs = [m for m in user_msgs if m.is_media]
-        text_msgs = [m for m in user_msgs if not m.is_media and not m.is_deleted and not m.is_call]
 
         per_person: dict[str, dict] = {}
         for p in chat.participants:
             p_media = [m for m in media_msgs if m.sender == p]
-            p_text = [m for m in text_msgs if m.sender == p]
             type_counts = Counter(m.media_type for m in p_media)
-
-            text_count = len(p_text)
             media_count = len(p_media)
-            ratio = round(media_count / text_count, 2) if text_count else 0
 
             per_person[p] = {
                 "stickers": type_counts.get("sticker", 0),

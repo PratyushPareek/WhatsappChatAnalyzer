@@ -84,5 +84,6 @@ class WordAnalyzer(IAnalyzer):
 
     @staticmethod
     def _extract_words(text: str) -> list[str]:
-        """Extract lowercase alphabetic words from text."""
-        return [w.lower() for w in text.split() if w.isalpha() and len(w) > 1]
+        """Extract lowercase words from text, stripping surrounding punctuation."""
+        import re
+        return [w for w in (re.sub(r"^[^\w']+|[^\w']+$", "", token).lower() for token in text.split()) if len(w) > 1]

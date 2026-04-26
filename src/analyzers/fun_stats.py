@@ -1,5 +1,6 @@
 import re
 from collections import Counter
+from datetime import timedelta
 
 from src.analyzers.base import AnalysisResult, IAnalyzer
 from src.config.settings import Settings
@@ -49,7 +50,7 @@ class FunStatsAnalyzer(IAnalyzer):
                         if any(ind in w_lower for ind in ("http", "www.", "://", ".com", ".org", ".html", ".pdf", ".jpg", ".png")):
                             continue
                         cleaned = re.sub(r"[^a-zA-Z]", "", w)
-                        if not cleaned or len(cleaned) > 30:
+                        if not cleaned:
                             continue
                         cleaned_lower = cleaned.lower()
                         if any(ind in cleaned_lower for ind in _SKIP_PATTERNS):
@@ -90,26 +91,51 @@ class FunStatsAnalyzer(IAnalyzer):
             }
 
         # 8.6 Rants — streaks of consecutive messages by one person (≥ 4 in a row, each with ≥ 2 words)
+        # Skip short filler messages (≤ 3 chars) from others without breaking streaks.
+        # A gap of ≥ 2 minutes between messages breaks any streak (temporal contiguity).
         _RANT_THRESHOLD = 4
+        gap = timedelta(minutes=2)
         rant_counts: dict[str, int] = {p: 0 for p in chat.participants}
         rant_longest: dict[str, int] = {p: 0 for p in chat.participants}
-        # Only consider messages with at least 2 words
-        rant_msgs = [m for m in user_msgs if len(m.content.split()) >= 2]
-        streak = 1
-        for i in range(1, len(rant_msgs)):
-            if rant_msgs[i].sender == rant_msgs[i - 1].sender:
+        streak = 0
+        streak_sender: str | None = None
+        last_dt = None
+        for m in user_msgs:
+            # Conversation gap breaks the streak
+            if last_dt is not None and m.datetime - last_dt >= gap:
+                if streak >= _RANT_THRESHOLD and streak_sender:
+                    rant_counts[streak_sender] += 1
+                    rant_longest[streak_sender] = max(rant_longest[streak_sender], streak)
+                streak = 0
+                streak_sender = None
+            last_dt = m.datetime
+
+            # Skip short filler messages (≤ 3 chars) from anyone
+            if len(m.content.strip()) <= 3:
+                continue
+
+            # Must have at least 2 words to count as a rant message
+            if len(m.content.split()) < 2:
+                if m.sender != streak_sender:
+                    if streak >= _RANT_THRESHOLD and streak_sender:
+                        rant_counts[streak_sender] += 1
+                        rant_longest[streak_sender] = max(rant_longest[streak_sender], streak)
+                    streak = 0
+                    streak_sender = None
+                continue
+
+            if m.sender == streak_sender:
                 streak += 1
             else:
-                if streak >= _RANT_THRESHOLD:
-                    sender = rant_msgs[i - 1].sender
-                    rant_counts[sender] += 1
-                    rant_longest[sender] = max(rant_longest[sender], streak)
+                if streak >= _RANT_THRESHOLD and streak_sender:
+                    rant_counts[streak_sender] += 1
+                    rant_longest[streak_sender] = max(rant_longest[streak_sender], streak)
                 streak = 1
+                streak_sender = m.sender
         # Handle last streak
-        if streak >= _RANT_THRESHOLD:
-            sender = rant_msgs[-1].sender
-            rant_counts[sender] += 1
-            rant_longest[sender] = max(rant_longest[sender], streak)
+        if streak >= _RANT_THRESHOLD and streak_sender:
+            rant_counts[streak_sender] += 1
+            rant_longest[streak_sender] = max(rant_longest[streak_sender], streak)
 
         rants: dict[str, dict] = {}
         for p in chat.participants:

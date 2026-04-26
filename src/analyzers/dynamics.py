@@ -58,10 +58,13 @@ class DynamicsAnalyzer(IAnalyzer):
         elif streak >= 3:
             consecutive[user_msgs[-1].sender]["triple_plus"] += 1
 
-        # 7.3 Question frequency
+        # 7.3 Question frequency (text messages only, ignore URLs with '?')
+        _URL_RE = re.compile(r"https?://\S+")
         question_counts = Counter()
-        for m in user_msgs:
-            if "?" in m.content:
+        text_only = [m for m in user_msgs if not m.is_media and not m.is_deleted and not m.is_call]
+        for m in text_only:
+            cleaned = _URL_RE.sub("", m.content)
+            if "?" in cleaned:
                 question_counts[m.sender] += 1
         question_stats = {p: question_counts.get(p, 0) for p in chat.participants}
 

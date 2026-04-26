@@ -610,8 +610,8 @@ class HTMLReportGenerator(IReportGenerator):
                 header += f'<th style="text-align:center;">{self._e(p)}</th>'
 
             metrics = [
-                ("Median", "median_display"),
                 ("25th Percentile", "p25_display"),
+                ("Median", "median_display"),
                 ("75th Percentile", "p75_display"),
                 ("Replies \u2264 1 min", "under_1m"),
             ]
@@ -637,9 +637,9 @@ class HTMLReportGenerator(IReportGenerator):
 <table><tr><th>Date</th><th>Messages</th></tr>{active_day_rows}</table>
 <h3>Top 5 Most Active Hours</h3>
 <table><tr><th>Date</th><th>Hour</th><th>Messages</th></tr>{active_hour_rows}</table>
-<h3>Response Time <span class="info-tip" data-tip="Only replies within 24 hours are counted">i</span></h3>
-{response_html}
 {self._charts_html(charts)}
+<h3>Response Time <span class="info-tip" data-tip="Only replies within {self._config.conversation_gap_hours}h are counted">i</span></h3>
+{response_html}
 </div>"""
 
     # ─── Section 4: Emoji ────────────────────────────────────────
@@ -852,7 +852,7 @@ class HTMLReportGenerator(IReportGenerator):
 <td>{m['density']}%</td>
 </tr>"""
 
-        tip = f'<span class="info-tip" data-tip="Conversations with 5+ messages, ranked by happy indicator count">i</span>'
+        tip = f'<span class="info-tip" data-tip="Conversations with 5+ messages, ranked by density of happy indicators">i</span>'
         return f"""<h3>Happiest Moments {tip}</h3>
 <table>
 <tr><th>#</th><th>Date</th><th>Messages</th><th>Happy Score</th><th>Density</th></tr>
@@ -902,7 +902,7 @@ class HTMLReportGenerator(IReportGenerator):
 {lw_html}
 <h3>Manners (thank you, sorry, please, …)</h3>
 {manners_kv}
-<h3>Rants (4+ consecutive messages)</h3>
+<h3>Rants <span class="info-tip" data-tip="4+ consecutive messages (≥2 words each) within 2 min of each other. Short fillers (≤3 chars) are ignored.">i</span></h3>
 {rants_kv}
 </div>"""
 
