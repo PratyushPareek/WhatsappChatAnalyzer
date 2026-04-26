@@ -142,116 +142,19 @@ A Python tool that reads **any** WhatsApp chat export (`.txt`), extracts insight
 
 ## Architecture
 
-```
-WAChatAnalysis/
-│
-├── chats/                              # Drop any WhatsApp .txt export(s) here
-│   └── *.txt
-│
-├── src/
-│   ├── __init__.py
-│   ├── main.py                         # Entry point: composes object graph, runs pipeline
-│   ├── pipeline.py                     # AnalysisPipeline: parse → analyze → visualize → report
-│   │
-│   ├── models/
-│   │   ├── __init__.py
-│   │   ├── message.py                  # Message dataclass (frozen)
-│   │   └── chat.py                     # Chat dataclass
-│   │
-│   ├── config/
-│   │   ├── __init__.py
-│   │   └── settings.py                 # Settings dataclass, loads config.yaml
-│   │
-│   ├── parser/
-│   │   ├── __init__.py
-│   │   ├── base.py                     # IChatParser (ABC)
-│   │   └── whatsapp_parser.py          # WhatsApp .txt parser
-│   │
-│   ├── analyzers/
-│   │   ├── __init__.py
-│   │   ├── base.py                     # IAnalyzer (ABC) + AnalysisResult
-│   │   ├── basic_stats.py              # Section 1
-│   │   ├── per_person.py               # Section 2
-│   │   ├── temporal.py                 # Section 3
-│   │   ├── emoji_analyzer.py           # Section 4
-│   │   ├── media.py                    # Section 5
-│   │   ├── word_analysis.py            # Section 6
-│   │   ├── dynamics.py                 # Section 7
-│   │   └── fun_stats.py               # Section 8
-│   │
-│   ├── visualizers/
-│   │   ├── __init__.py
-│   │   ├── base.py                     # IVisualizer (ABC)
-│   │   ├── plotly_visualizer.py        # Plotly interactive charts (active)
-│   │   └── matplotlib_visualizer.py    # Matplotlib static charts (fallback)
-│   │
-│   └── report/
-│       ├── __init__.py
-│       ├── base.py                     # IReportGenerator (ABC)
-│       ├── html_report.py             # HTML report with design system (active)
-│       └── pdf_report.py              # PDF report (legacy, not actively used)
-│
-├── output/                             # Generated reports + chart assets
-├── config.yaml                         # User-editable settings
-├── requirements.txt
-├── ARCHITECTURE.md                     # SOLID architecture plan
-├── DESIGN.md                           # CSS design system tokens
-├── NOTES.md                            # Parsing format notes
-└── PRD.md                              # This file
-```
+See [`ARCHITECTURE.md`](ARCHITECTURE.md) for the full SOLID architecture, directory structure, interfaces, data model, pipeline, and class definitions.
 
 ---
 
 ## Data Model
 
-### Message (frozen dataclass)
-
-| Field | Type | Example |
-|-------|------|---------|
-| `datetime` | `datetime` | `2023-09-25 19:26:00` |
-| `sender` | `str` | `Alice` |
-| `content` | `str` | `Haan` |
-| `is_system` | `bool` | `False` |
-| `is_media` | `bool` | `False` |
-| `media_type` | `str\|None` | `sticker`, `image`, `video`, `audio`, `contact`, `pdf`, `document`, `unknown`, `None` |
-| `is_deleted` | `bool` | `False` |
-| `is_call` | `bool` | `False` |
-| `call_type` | `str\|None` | `voice`, `video`, `None` |
-
-### Chat
-
-| Field | Type |
-|-------|------|
-| `messages` | `list[Message]` |
-| `participants` | `list[str]` |
-| `source_file` | `str` |
-| `date_range` | `tuple[datetime, datetime]` |
+See [`ARCHITECTURE.md`](ARCHITECTURE.md) for the full `Message` and `Chat` dataclass definitions.
 
 ---
 
 ## Parsing Rules
 
-1. **Two message line formats** (auto-detected):
-   - **Format A**: `M/D/YY, H:MM AM/PM - Sender: message` (12h, dash separator)
-   - **Format B**: `[DD/MM/YY, HH:MM:SS] Sender: message` (24h, square brackets, optional U+200E prefix)
-2. **User message**: matches either regex AND has `: ` after sender name
-3. **System message**: matches regex but no `: ` sender pattern
-4. **Multi-line message**: does NOT match regex → append to previous message
-5. **Participant detection**: auto-extracted from unique sender names
-6. **Media detection**:
-   - `<Media omitted>` → `media_type = unknown`
-   - `sticker omitted` / `image omitted` / `video omitted` / `audio omitted` / `GIF omitted` / `Contact card omitted` → respective type (Format B)
-   - `STK-*.webp (file attached)` → `sticker`
-   - `IMG-*.jpg (file attached)` → `image`
-   - `VID-* (file attached)` → `video`
-   - `PTT-* / AUD-* (file attached)` → `audio`
-   - `DOC-* (file attached)` → `document`
-   - `*.vcf (file attached)` → `contact`
-   - `*.pdf (file attached)` → `pdf`
-7. **Deleted**: `This message was deleted` or `You deleted this message`
-8. **Missed calls**: `Missed voice call` or `Missed video call`
-9. **Encoding**: handles both regular space and `\u202F` (narrow no-break space) before AM/PM; strips `\u200E` (left-to-right mark) from Format B lines
-10. **Date format**: auto-detects `M/D/YY` (US) vs `D/M/YY` (international); configurable override
+See [`NOTES.md`](NOTES.md) for the full WhatsApp format specification, regex patterns, encoding quirks, media detection, and date format detection.
 
 ---
 
