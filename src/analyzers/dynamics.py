@@ -2,6 +2,8 @@ import re
 from collections import Counter
 from datetime import timedelta
 
+from emoji import emoji_list
+
 from src.analyzers.base import AnalysisResult, IAnalyzer
 from src.config.settings import Settings
 from src.models.chat import Chat
@@ -67,7 +69,7 @@ class DynamicsAnalyzer(IAnalyzer):
         laugh_counts = Counter()
         for m in user_msgs:
             has_laugh = bool(_LAUGH_PATTERNS.search(m.content))
-            has_emoji = bool(_LAUGH_EMOJIS & set(m.content))
+            has_emoji = any(e["emoji"] in _LAUGH_EMOJIS for e in emoji_list(m.content))
             if has_laugh or has_emoji:
                 laugh_counts[m.sender] += 1
         laugh_stats = {p: laugh_counts.get(p, 0) for p in chat.participants}

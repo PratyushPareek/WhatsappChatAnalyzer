@@ -39,7 +39,7 @@ class HappinessAnalyzer(IAnalyzer):
         monthly_happy: Counter = Counter()
 
         for m in user_msgs:
-            content_emojis = set(m.content)
+            content_emojis = {e["emoji"] for e in emoji_lib.emoji_list(m.content)}
             month_key = m.datetime.strftime("%Y-%m")
 
             is_happy = bool(_HAPPY_WORDS.search(m.content)) or bool(_HAPPY_EMOJIS & content_emojis)

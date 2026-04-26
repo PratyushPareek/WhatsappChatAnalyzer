@@ -21,7 +21,7 @@ class EmojiAnalyzer(IAnalyzer):
         monthly_emoji_counts: Counter = Counter()
 
         for m in user_msgs:
-            emojis_in_msg = [c for c in m.content if emoji.is_emoji(c)]
+            emojis_in_msg = [e["emoji"] for e in emoji.emoji_list(m.content)]
             if emojis_in_msg:
                 per_person_emojis[m.sender].extend(emojis_in_msg)
                 all_emojis.extend(emojis_in_msg)
