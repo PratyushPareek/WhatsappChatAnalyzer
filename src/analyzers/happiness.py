@@ -60,14 +60,24 @@ class HappinessAnalyzer(IAnalyzer):
 
         total_happy = sum(happy_counts.values())
 
-        # Happiest month
+        # Happiest month (by density: happy messages / total messages that month)
+        monthly_total: Counter = Counter()
+        for m in user_msgs:
+            monthly_total[m.datetime.strftime("%Y-%m")] += 1
+
         happiest_month = None
         if monthly_happy:
-            best_month, best_count = monthly_happy.most_common(1)[0]
+            best_month = max(
+                monthly_happy,
+                key=lambda mk: monthly_happy[mk] / monthly_total[mk],
+            )
             dt = datetime.strptime(best_month, "%Y-%m")
+            density = round(monthly_happy[best_month] / monthly_total[best_month] * 100, 1)
             happiest_month = {
                 "month": dt.strftime("%B %Y"),
-                "count": best_count,
+                "count": monthly_happy[best_month],
+                "total": monthly_total[best_month],
+                "density": density,
             }
 
         # Happiest moments — score each conversation by happy+love density
@@ -102,7 +112,7 @@ class HappinessAnalyzer(IAnalyzer):
                 "sender": convo_msgs[0].sender,
             })
 
-        scored_convos.sort(key=lambda x: x["score"], reverse=True)
+        scored_convos.sort(key=lambda x: x["density"], reverse=True)
         happiest_moments = scored_convos[:5]
 
         stats = {

@@ -42,7 +42,7 @@ class Settings:
         return cls(
             stop_words=[str(w) for w in data.get("stop_words", [])],
             manners_words=[str(w) for w in data.get("manners_words", [])] or cls().manners_words,
-            conversation_gap_hours=data.get("conversation_gap_hours", 12),
+            conversation_gap_hours=data.get("conversation_gap_hours", 15),
             min_caps_word_length=data.get("min_caps_word_length", 3),
             top_words_count=data.get("top_words_count", 20),
             top_emojis_per_person=data.get("top_emojis_per_person", 5),
