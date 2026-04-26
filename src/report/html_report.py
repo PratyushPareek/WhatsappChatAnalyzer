@@ -374,6 +374,30 @@ tr:hover td {
   margin-bottom: var(--space-1);
 }
 
+.appendix-caution {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-6);
+  margin-bottom: var(--space-6);
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-left: 4px solid #f59e0b;
+  border-radius: var(--radius-sm);
+}
+
+.appendix-caution-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.appendix-caution-text {
+  font-size: var(--text-sm);
+  color: #92400e;
+  line-height: var(--leading-normal);
+}
+
 /* ═══════════════════════════════════════════════════════════
    Tooltip
    ═══════════════════════════════════════════════════════════ */
@@ -953,6 +977,9 @@ class HTMLReportGenerator(IReportGenerator):
                     longest_rants = r.appendix["longest_rants"]
 
         parts = []
+
+        if first_messages or longest_messages or longest_rants:
+            parts.append('<div class="appendix-caution"><div class="appendix-caution-icon">⚠️</div><div class="appendix-caution-text"><strong>Caution:</strong> Actual messages from your chat appear below.</div></div>')
 
         if first_messages:
             items = ""
