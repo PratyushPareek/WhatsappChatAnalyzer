@@ -344,6 +344,36 @@ tr:hover td {
   overflow-y: auto;
 }
 
+.rant-chat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: var(--space-3) 0;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.rant-bubble {
+  background: var(--color-bg-warm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm) var(--radius-sm) var(--radius-sm) 4px;
+  padding: var(--space-3) var(--space-4);
+  max-width: 85%;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: var(--leading-loose);
+  color: var(--color-text-secondary);
+}
+
+.rant-bubble .rant-time {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-1);
+}
+
 /* ═══════════════════════════════════════════════════════════
    Tooltip
    ═══════════════════════════════════════════════════════════ */
@@ -828,7 +858,7 @@ class HTMLReportGenerator(IReportGenerator):
         if happiest_month:
             hm_card = self._stat_card("Happiest Month", happiest_month["month"], f"{happiest_month['count']} happy messages")
 
-        tip = '<span class="info-tip" data-tip="Counted by happy/laughing keywords + emojis">i</span>'
+        tip = '<span class="info-tip" data-tip="Counted by happy/laughing keywords + emojis. Only days in the 25th–75th percentile of message volume are included.">i</span>'
 
         return f"""<div class="section">
 <h2>5. Happiness Analysis {tip}</h2>
@@ -890,7 +920,8 @@ class HTMLReportGenerator(IReportGenerator):
         rants_kv = ""
         for p, d in s.get("rants", {}).items():
             if d["count"] > 0:
-                rants_kv += self._kv(p, f"{d['count']} rants (longest: {d['longest_streak']} messages)")
+                date_ref = f" on {d['longest_streak_date']}" if d.get("longest_streak_date") else ""
+                rants_kv += self._kv(p, f"{d['count']} rants (longest: {d['longest_streak']} messages{date_ref})")
             else:
                 rants_kv += self._kv(p, "0 rants")
 
@@ -911,12 +942,15 @@ class HTMLReportGenerator(IReportGenerator):
     def _appendices(self, results: list[AnalysisResult]) -> str:
         first_messages = {}
         longest_messages = {}
+        longest_rants = {}
         for r in results:
             if r.appendix:
                 if "first_messages" in r.appendix:
                     first_messages = r.appendix["first_messages"]
                 if "longest_messages" in r.appendix:
                     longest_messages = r.appendix["longest_messages"]
+                if "longest_rants" in r.appendix:
+                    longest_rants = r.appendix["longest_rants"]
 
         parts = []
 
@@ -936,5 +970,18 @@ class HTMLReportGenerator(IReportGenerator):
 {self._kv("Date", f"{d['date']} at {d['time']}")}
 <div class="appendix-content">{self._e(d['content'][:3000])}</div>"""
             parts.append(f'<div class="section"><h2>Appendix B: Longest Messages</h2>{items}</div>')
+
+        if longest_rants:
+            items = ""
+            for p, msg_list in longest_rants.items():
+                bubbles = ""
+                for d in msg_list:
+                    bubbles += f"""<div class="rant-bubble">
+<span class="rant-time">{d['date']} at {d['time']}</span>
+{self._e(d['content'][:3000])}
+</div>"""
+                items += f"""<h3>{self._e(p)}</h3>
+<div class="rant-chat">{bubbles}</div>"""
+            parts.append(f'<div class="section"><h2>Appendix C: Longest Rant (First 2 Messages)</h2>{items}</div>')
 
         return "\n".join(parts)

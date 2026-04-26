@@ -91,23 +91,38 @@ class FunStatsAnalyzer(IAnalyzer):
             }
 
         # 8.6 Rants — streaks of consecutive messages by one person (≥ 4 in a row, each with ≥ 2 words)
+        # Media, deleted, and call messages are stripped out entirely.
         # Skip short filler messages (≤ 3 chars) from others without breaking streaks.
         # A gap of ≥ 2 minutes between messages breaks any streak (temporal contiguity).
         _RANT_THRESHOLD = 4
         gap = timedelta(minutes=2)
         rant_counts: dict[str, int] = {p: 0 for p in chat.participants}
         rant_longest: dict[str, int] = {p: 0 for p in chat.participants}
+        rant_longest_dt: dict[str, None | object] = {p: None for p in chat.participants}
+        rant_longest_msgs: dict[str, list] = {p: [] for p in chat.participants}
         streak = 0
         streak_sender: str | None = None
+        streak_start_dt = None
+        streak_msgs: list = []
         last_dt = None
-        for m in user_msgs:
+
+        def _finalize_streak():
+            nonlocal streak, streak_sender, streak_start_dt, streak_msgs
+            if streak >= _RANT_THRESHOLD and streak_sender:
+                rant_counts[streak_sender] += 1
+                if streak > rant_longest[streak_sender]:
+                    rant_longest[streak_sender] = streak
+                    rant_longest_dt[streak_sender] = streak_start_dt
+                    rant_longest_msgs[streak_sender] = streak_msgs[:2]
+
+        for m in text_msgs:
             # Conversation gap breaks the streak
             if last_dt is not None and m.datetime - last_dt >= gap:
-                if streak >= _RANT_THRESHOLD and streak_sender:
-                    rant_counts[streak_sender] += 1
-                    rant_longest[streak_sender] = max(rant_longest[streak_sender], streak)
+                _finalize_streak()
                 streak = 0
                 streak_sender = None
+                streak_start_dt = None
+                streak_msgs = []
             last_dt = m.datetime
 
             # Skip short filler messages (≤ 3 chars) from anyone
@@ -117,32 +132,48 @@ class FunStatsAnalyzer(IAnalyzer):
             # Must have at least 2 words to count as a rant message
             if len(m.content.split()) < 2:
                 if m.sender != streak_sender:
-                    if streak >= _RANT_THRESHOLD and streak_sender:
-                        rant_counts[streak_sender] += 1
-                        rant_longest[streak_sender] = max(rant_longest[streak_sender], streak)
+                    _finalize_streak()
                     streak = 0
                     streak_sender = None
+                    streak_start_dt = None
+                    streak_msgs = []
                 continue
 
             if m.sender == streak_sender:
                 streak += 1
+                streak_msgs.append(m)
             else:
-                if streak >= _RANT_THRESHOLD and streak_sender:
-                    rant_counts[streak_sender] += 1
-                    rant_longest[streak_sender] = max(rant_longest[streak_sender], streak)
+                _finalize_streak()
                 streak = 1
                 streak_sender = m.sender
+                streak_start_dt = m.datetime
+                streak_msgs = [m]
         # Handle last streak
-        if streak >= _RANT_THRESHOLD and streak_sender:
-            rant_counts[streak_sender] += 1
-            rant_longest[streak_sender] = max(rant_longest[streak_sender], streak)
+        _finalize_streak()
 
         rants: dict[str, dict] = {}
         for p in chat.participants:
+            longest_ref = None
+            if rant_longest_dt[p]:
+                longest_ref = rant_longest_dt[p].strftime("%B %d, %Y at %I:%M %p")
             rants[p] = {
                 "count": rant_counts[p],
                 "longest_streak": rant_longest[p],
+                "longest_streak_date": longest_ref,
             }
+
+        # Appendix: first 2 messages of longest rant per person
+        rant_appendix = {}
+        for p in chat.participants:
+            if rant_longest_msgs[p]:
+                rant_appendix[p] = [
+                    {
+                        "date": m.datetime.strftime("%B %d, %Y"),
+                        "time": m.datetime.strftime("%I:%M %p"),
+                        "content": m.content,
+                    }
+                    for m in rant_longest_msgs[p]
+                ]
 
         stats = {
             "deleted_messages": deleted_stats,
@@ -157,4 +188,5 @@ class FunStatsAnalyzer(IAnalyzer):
             section_id="fun_stats",
             title="Miscellaneous",
             stats=stats,
+            appendix={"longest_rants": rant_appendix} if rant_appendix else None,
         )

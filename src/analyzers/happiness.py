@@ -32,6 +32,17 @@ class HappinessAnalyzer(IAnalyzer):
         user_msgs = [m for m in chat.messages if not m.is_system
                      and not m.is_media and not m.is_deleted and not m.is_call]
 
+        # Filter to days in the 25th–75th percentile of messages-per-day
+        # to remove anomaly days (very quiet or very busy)
+        day_counts = Counter(m.datetime.date() for m in user_msgs)
+        if day_counts:
+            sorted_counts = sorted(day_counts.values())
+            n = len(sorted_counts)
+            p25 = sorted_counts[n // 4]
+            p75 = sorted_counts[(3 * n) // 4]
+            valid_days = {d for d, c in day_counts.items() if p25 <= c <= p75}
+            user_msgs = [m for m in user_msgs if m.datetime.date() in valid_days]
+
         # Per-person counts
         happy_counts = {p: 0 for p in chat.participants}
 

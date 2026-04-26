@@ -106,7 +106,13 @@ class WhatsAppParser(IChatParser):
         content = raw["content"].lstrip("\u200e")
         is_system = raw["is_system"]
 
-        is_media, media_type = self._detect_media(content)
+        # Detect media on the first line only — continuation lines after
+        # <Media omitted> or file-attached messages are not part of the media.
+        first_line = content.split("\n", 1)[0]
+        is_media, media_type = self._detect_media(first_line)
+        if is_media:
+            content = first_line
+
         is_deleted = content.strip() in _DELETED_MESSAGES
         is_call = content.strip() in _CALL_MESSAGES
         call_type = _CALL_MESSAGES.get(content.strip())
