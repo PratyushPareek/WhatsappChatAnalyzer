@@ -175,6 +175,32 @@ class FunStatsAnalyzer(IAnalyzer):
                     for m in rant_longest_msgs[p]
                 ]
 
+        # 8.7 Grammar Nazi — proper punctuation and capitalization
+        _SENTENCE_END_RE = re.compile(r'[.!?]\s')
+        grammar: dict[str, dict] = {}
+        for p in chat.participants:
+            p_text = [m for m in text_msgs if m.sender == p]
+            if not p_text:
+                grammar[p] = {"punctuation": 0, "punctuation_pct": 0.0,
+                              "capitalization": 0, "capitalization_pct": 0.0}
+                continue
+            punct_count = 0
+            cap_count = 0
+            for m in p_text:
+                content = m.content.strip()
+                # Proper punctuation: message ends with . ! or ?
+                if content and content[-1] in '.!?':
+                    punct_count += 1
+                # Proper capitalization: message starts with an uppercase letter
+                if content and content[0].isupper():
+                    cap_count += 1
+            grammar[p] = {
+                "punctuation": punct_count,
+                "punctuation_pct": round(punct_count / len(p_text) * 100, 1),
+                "capitalization": cap_count,
+                "capitalization_pct": round(cap_count / len(p_text) * 100, 1),
+            }
+
         stats = {
             "deleted_messages": deleted_stats,
             "most_used_word": most_used_word,
@@ -182,6 +208,7 @@ class FunStatsAnalyzer(IAnalyzer):
             "shouting_index": shouting,
             "manners": manners,
             "rants": rants,
+            "grammar": grammar,
         }
 
         return AnalysisResult(

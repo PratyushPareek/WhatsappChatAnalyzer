@@ -168,7 +168,7 @@ class IAnalyzer(ABC):
 | `WordAnalyzer` | 6 | top words, word cloud data, vocab size |
 | `DynamicsAnalyzer` | 7 | initiator counts, consecutive msgs, questions, laughs |
 | `HappinessAnalyzer` | 8 | happy message counts, happiest month, happiest days (day-based, `count/n^0.1` index) |
-| `FunStatsAnalyzer` | 9 | deleted msgs, longest word, manners, rants (temporal contiguity, filler skip) |
+| `FunStatsAnalyzer` | 9 | deleted msgs, longest word, manners, rants (temporal contiguity, filler skip), grammar nazi (punctuation + capitalization) |
 
 **Principle**: Single Responsibility — each analyzer does one thing. Interface Segregation — analyzers don't need to know about charts or PDFs. New sections = new analyzer class, no changes to existing ones (Open/Closed).
 

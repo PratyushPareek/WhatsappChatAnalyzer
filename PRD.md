@@ -123,8 +123,9 @@ A Python tool that reads **any** WhatsApp chat export (`.txt`), extracts insight
 |---|--------|-------|
 | 9.1 | Deleted messages | Per person count |
 | 9.2 | Longest word | Per person — word-wrap enabled for display |
-| 9.3 | Manners | Messages containing polite words (thank you, sorry, please, etc.) per person — count + percentage. Keywords configurable via `manners_words` in `config.yaml` (regex fragments, e.g. `th(?:a|e)nk\s?(?:you|u|ss*)`) |
-| 9.4 | Rants | Streaks of 4+ consecutive messages (each with ≥ 2 words, within 2 min of each other) by one person — count + longest streak per person + date reference. Short fillers (≤3 chars) are ignored without breaking streaks. ⓘ tooltip explains criteria |
+| 9.3 | Rants | Streaks of 4+ consecutive messages (each with ≥ 2 words, within 2 min of each other) by one person — count + longest streak per person + date reference. Short fillers (≤3 chars) are ignored without breaking streaks. ⓘ tooltip explains criteria |
+| 9.4 | Manners | Messages containing polite words (thank you, sorry, please, etc.) per person — count + percentage. Keywords configurable via `manners_words` in `config.yaml` (regex fragments, e.g. `th(?:a|e)nk\s?(?:you|u|ss*)`) |
+| 9.5 | Grammar Nazi | Per person: messages ending with proper punctuation (`.` `!` `?`) and messages starting with a capital letter — count + percentage. ⓘ tooltip explains criteria |
 
 ---
 
@@ -200,7 +201,7 @@ See [`NOTES.md`](NOTES.md) for the full WhatsApp format specification, regex pat
 6. **Section 5** — Media table + unique sticker cards + top sticker tables
 7. **Section 6** — Avg W/M cards + vocabulary cards + top-10 word tables + word clouds
 8. **Section 7** — Conversations card + KV sections (initiator, morning, ghost, consec, questions, laughs) + conversation length table
-9. **Section 8** — Deleted messages + longest word per person + manners + rants
+9. **Section 8** — Deleted messages + longest word per person + rants + manners + grammar nazi
 10. **Appendix caution banner** — Warns that actual messages appear below
 11. **Appendix A** — First messages (full text)
 12. **Appendix B** — Top 3 longest messages per person (full text)

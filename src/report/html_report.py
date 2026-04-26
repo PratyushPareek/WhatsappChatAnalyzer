@@ -952,16 +952,23 @@ class HTMLReportGenerator(IReportGenerator):
             else:
                 rants_kv += self._kv(p, "0 rants")
 
+        grammar_rows = ""
+        for p, d in s.get("grammar", {}).items():
+            grammar_rows += f'<tr><td>{self._e(p)}</td><td>{d["punctuation"]} ({d["punctuation_pct"]}%)</td><td>{d["capitalization"]} ({d["capitalization_pct"]}%)</td></tr>'
+        grammar_table = f"""<table><thead><tr><th>Participant</th><th>Proper Punctuation</th><th>Capitalization</th></tr></thead><tbody>{grammar_rows}</tbody></table>""" if grammar_rows else ""
+
         return f"""<div class="section">
 <h2>9. Miscellaneous</h2>
 <h3>Deleted Messages</h3>
 {del_kv}
 <h3>Longest Word</h3>
 {lw_html}
-<h3>Manners (thank you, sorry, please, …)</h3>
-{manners_kv}
 <h3>Rants <span class="info-tip" data-tip="4+ consecutive messages (≥2 words each) within 2 min of each other. Short fillers (≤3 chars) are ignored.">i</span></h3>
 {rants_kv}
+<h3>Manners (thank you, sorry, please, …)</h3>
+{manners_kv}
+<h3>Grammar Nazi <span class="info-tip" data-tip="Punctuation: messages ending with . ! or ? — Capitalization: messages starting with an uppercase letter. Percentages are of total text messages sent by that person.">i</span></h3>
+{grammar_table}
 </div>"""
 
     # ─── Appendices ──────────────────────────────────────────────
