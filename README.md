@@ -26,7 +26,6 @@ It's a map of your relationship through chat data. The stats are just the starti
 - **Happiness analysis**: detects happy moments using keyword + emoji matching
 - **Word clouds**: CSS-based per-person word clouds
 - **Configurable**: stop words (English + Hinglish), conversation gap, emoji counts via `config.yaml`
-- **Works with any chat**: 1-on-1 or group, any number of participants, auto-detected
 
 ## Quick Start
 

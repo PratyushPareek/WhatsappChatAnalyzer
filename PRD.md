@@ -2,7 +2,7 @@
 
 ## Overview
 
-A Python tool that reads **any** WhatsApp chat export (`.txt`), extracts insights, and generates a styled **HTML report** with interactive Plotly charts. Works with both **1-on-1 and group chats** — participants are auto-detected, and all metrics adapt to the number of participants.
+A Python tool that reads **any** WhatsApp 1-on-1 chat export (`.txt`), extracts insights, and generates a styled **HTML report** with interactive Plotly charts. Participants are auto-detected, and all metrics adapt to both participants.
 
 ---
 
