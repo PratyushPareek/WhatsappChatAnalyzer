@@ -24,6 +24,14 @@ M/D/YY, H:MM AM/PM - Sender: Message content
 - Wrapped in `[...]`; some lines prefixed with U+200E (left-to-right mark)
 - Sender/message separator: `: ` (colon-space)
 
+**Format C** (12-hour with seconds, square brackets):
+```
+[DD/MM/YY, H:MM:SS AM/PM] Sender: Message content
+```
+- Same bracket style as Format B, but with 12-hour time + seconds + AM/PM
+- Space before AM/PM may be regular or `\u202F` (narrow no-break space)
+- May have U+200E prefix
+
 ### Regex
 
 Format A:
@@ -34,6 +42,11 @@ r'^(\d{1,2}/\d{1,2}/\d{2,4}),\s(\d{1,2}:\d{2}[\s\u202f][APap][Mm])\s-\s'
 Format B:
 ```python
 r'^\u200e?\[(\d{1,2}/\d{1,2}/\d{2,4}),\s(\d{1,2}:\d{2}:\d{2})\]\s'
+```
+
+Format C:
+```python
+r'^\u200e?\[(\d{1,2}/\d{1,2}/\d{2,4}),\s(\d{1,2}:\d{2}:\d{2}[\s\u202f][APap][Mm])\]\s'
 ```
 
 ### Encoding Quirk
@@ -66,7 +79,8 @@ No `: ` after the sender — no sender at all:
    - **Prefix**: `STK-` → sticker, `IMG-` → image, `VID-` → video, `PTT-`/`AUD-` → audio, `DOC-` → document
    - **Extension**: `.vcf` → contact, `.pdf` → pdf
    - **Fallback**: `unknown`
-3. `X omitted` (Format B) → `sticker omitted`, `image omitted`, `video omitted`, `audio omitted`, `document omitted`, `GIF omitted`, `Contact card omitted`
+3. `X omitted` (Format B/C) → `sticker omitted`, `image omitted`, `video omitted`, `video note omitted`, `audio omitted`, `document omitted`, `GIF omitted`, `Contact card omitted`
+4. **Captioned media**: `caption text \u200E<type> omitted` — a media message sent with a text caption. The `\u200E<type> omitted` suffix is stripped, the message is marked as media, and the caption is preserved in `content`. Works across single-line and multi-line messages.
 
 ### Deleted Messages
 - `This message was deleted` (other person deleted)

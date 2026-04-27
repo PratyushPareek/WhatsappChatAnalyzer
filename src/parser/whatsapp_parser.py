@@ -35,7 +35,9 @@ _LINE_RE_C = re.compile(
 _MEDIA_OMITTED = "<Media omitted>"
 _FILE_ATTACHED_RE = re.compile(r"^(.+)\s\(file attached\)$")
 # Format B uses "X omitted" (with optional U+200E prefix)
-_OMITTED_RE = re.compile(r"^\u200e?(sticker|image|video|audio|document|GIF|Contact card) omitted$")
+_OMITTED_RE = re.compile(r"^\u200e?(sticker|image|video note|video|audio|document|GIF|Contact card) omitted$")
+# Captioned media: "some caption ‎image omitted" — trailing omitted with U+200E separator
+_CAPTION_OMITTED_RE = re.compile(r"\s*\u200e(sticker|image|video note|video|audio|document|GIF|Contact card) omitted$")
 _MEDIA_PREFIX_MAP = {
     "STK": "sticker",
     "IMG": "image",
@@ -122,6 +124,21 @@ class WhatsAppParser(IChatParser):
         if is_media:
             content = first_line
 
+        # Captioned media: "some caption ‎image omitted" — strip the trailing
+        # omitted indicator and mark as media, keeping the caption as content.
+        # Check across all lines (caption may be on a different line than the indicator).
+        if not is_media:
+            cap_match = _CAPTION_OMITTED_RE.search(content)
+            if cap_match:
+                _omitted_type_map = {
+                    "sticker": "sticker", "image": "image", "video": "video",
+                    "video note": "video", "audio": "audio", "document": "document",
+                    "GIF": "image", "Contact card": "contact",
+                }
+                is_media = True
+                media_type = _omitted_type_map.get(cap_match.group(1), "unknown")
+                content = content[:cap_match.start()].strip()
+
         is_deleted = content.strip() in _DELETED_MESSAGES
         is_call = content.strip() in _CALL_MESSAGES
         call_type = _CALL_MESSAGES.get(content.strip())
@@ -207,6 +224,7 @@ class WhatsAppParser(IChatParser):
                 "sticker": "sticker",
                 "image": "image",
                 "video": "video",
+                "video note": "video",
                 "audio": "audio",
                 "document": "document",
                 "GIF": "image",
