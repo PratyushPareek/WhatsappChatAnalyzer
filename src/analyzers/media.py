@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections import Counter
 
 from src.analyzers.base import AnalysisResult, IAnalyzer

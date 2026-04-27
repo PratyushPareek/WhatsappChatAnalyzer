@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from src.analyzers.base import AnalysisResult, IAnalyzer
 from src.models.chat import Chat
 from src.parser.base import IChatParser

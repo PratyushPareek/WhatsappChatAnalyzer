@@ -2,7 +2,7 @@
 
 Turn any WhatsApp chat export into an interactive HTML report with charts, stats, and insights.
 
-![Python](https://img.shields.io/badge/Python-3.10+-blue)
+![Python](https://img.shields.io/badge/Python-3.9+-blue)
 
 > **Best viewed on a PC or tablet browser** — the report has interactive charts and comparison tables that benefit from a wider screen.
 
@@ -31,7 +31,7 @@ It's a map of your relationship through chat data. The stats are just the starti
 
 ### Prerequisites
 
-- **Python 3.10+** — [Download here](https://www.python.org/downloads/)
+- **Python 3.9+** — [Download here](https://www.python.org/downloads/)
   - On Windows, check **"Add Python to PATH"** during installation
 
 ### 1. Clone the repo
@@ -104,7 +104,7 @@ python -m src.main
 | 6 | Emoji Analysis | Total/unique emojis, top 5 per person, top 10 overall |
 | 7 | Sticker & Media | Stickers/images/videos/audio/contacts/PDFs, unique stickers, top 5 stickers |
 | 8 | Word & Language | Top 10 words per person, vocabulary size, word clouds |
-| 9 | Miscellaneous | Deleted messages, longest word per person, manners (polite words), rants (consecutive message streaks) |
+| 9 | Miscellaneous | Deleted messages, longest word per person, rants, manners (polite words), grammar nazi (punctuation + capitalization) |
 
 Plus **Appendix A** (first messages), **Appendix B** (top 3 longest messages), **Appendix C** (longest rant — first 2 messages as chat bubbles), and **Appendix D** (happiest days — first 2 messages as chat bubbles).
 
