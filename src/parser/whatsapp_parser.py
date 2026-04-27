@@ -178,7 +178,7 @@ class WhatsAppParser(IChatParser):
         """Auto-detect MDY vs DMY by scanning date fields for values > 12."""
         first_fields = []
         second_fields = []
-        for line in lines[:500]:
+        for line in lines:
             m = self._line_re.match(line)
             if m:
                 parts = m.group(1).split("/")
