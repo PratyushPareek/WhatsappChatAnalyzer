@@ -4,7 +4,7 @@
 
 ### Message Line Format
 
-Two formats are supported (auto-detected from the first 50 lines):
+Four formats are supported (auto-detected from the first 50 lines):
 
 **Format A** (12-hour, dash separator):
 ```
@@ -32,6 +32,13 @@ M/D/YY, H:MM AM/PM - Sender: Message content
 - Space before AM/PM may be regular or `\u202F` (narrow no-break space)
 - May have U+200E prefix
 
+**Format D** (24-hour, dash separator, no seconds):
+```
+M/D/YY, HH:MM - Sender: Message content
+```
+- Same dash style as Format A, but with 24-hour time and no seconds
+- No AM/PM
+
 ### Regex
 
 Format A:
@@ -47,6 +54,11 @@ r'^\u200e?\[(\d{1,2}/\d{1,2}/\d{2,4}),\s(\d{1,2}:\d{2}:\d{2})\]\s'
 Format C:
 ```python
 r'^\u200e?\[(\d{1,2}/\d{1,2}/\d{2,4}),\s(\d{1,2}:\d{2}:\d{2}[\s\u202f][APap][Mm])\]\s'
+```
+
+Format D:
+```python
+r'^(\d{1,2}/\d{1,2}/\d{2,4}),\s(\d{1,2}:\d{2})\s-\s'
 ```
 
 ### Encoding Quirk

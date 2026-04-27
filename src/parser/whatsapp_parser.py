@@ -32,6 +32,14 @@ _LINE_RE_C = re.compile(
     r"(.+)$"                                               # rest
 )
 
+# Format D: 9/10/19, 20:50 - Sender: message  (dash separator + 24h without seconds)
+_LINE_RE_D = re.compile(
+    r"^(\d{1,2}/\d{1,2}/\d{2,4}),\s"        # date
+    r"(\d{1,2}:\d{2})"                        # 24h time without seconds
+    r"\s-\s"                                   # separator
+    r"(.+)$"                                   # rest
+)
+
 _MEDIA_OMITTED = "<Media omitted>"
 _FILE_ATTACHED_RE = re.compile(r"^(.+)\s\(file attached\)$")
 # Format B uses "X omitted" (with optional U+200E prefix)
@@ -176,12 +184,15 @@ class WhatsAppParser(IChatParser):
             else:
                 t = datetime.strptime(time_str, "%I:%M %p")
         else:
-            # 24-hour format: HH:MM:SS
-            t = datetime.strptime(time_str, "%H:%M:%S")
+            # 24-hour format: HH:MM:SS or HH:MM
+            if time_str.count(":") == 2:
+                t = datetime.strptime(time_str, "%H:%M:%S")
+            else:
+                t = datetime.strptime(time_str, "%H:%M")
         return datetime(year, month, day, t.hour, t.minute, t.second)
 
     def _detect_format(self, lines: list[str]) -> re.Pattern:
-        """Detect whether the file uses format A, B, or C."""
+        """Detect whether the file uses format A, B, C, or D."""
         for line in lines[:50]:
             if _LINE_RE_A.match(line):
                 return _LINE_RE_A
@@ -189,6 +200,8 @@ class WhatsAppParser(IChatParser):
                 return _LINE_RE_C
             if _LINE_RE_B.match(line):
                 return _LINE_RE_B
+            if _LINE_RE_D.match(line):
+                return _LINE_RE_D
         return _LINE_RE_A  # default
 
     def _detect_date_format(self, lines: list[str]) -> str:
