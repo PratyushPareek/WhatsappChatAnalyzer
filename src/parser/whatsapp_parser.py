@@ -25,6 +25,13 @@ _LINE_RE_B = re.compile(
     r"(.+)$"                                      # rest
 )
 
+# Format C: [03/06/21, 2:24:26 PM] Sender: message  (brackets + 12h with seconds)
+_LINE_RE_C = re.compile(
+    r"^\u200e?\[(\d{1,2}/\d{1,2}/\d{2,4}),\s"            # optional LTR mark + [ + date
+    r"(\d{1,2}:\d{2}:\d{2}[\s\u202f][APap][Mm])\]\s"      # 12h time with seconds + AM/PM + ]
+    r"(.+)$"                                               # rest
+)
+
 _MEDIA_OMITTED = "<Media omitted>"
 _FILE_ATTACHED_RE = re.compile(r"^(.+)\s\(file attached\)$")
 # Format B uses "X omitted" (with optional U+200E prefix)
@@ -145,19 +152,24 @@ class WhatsAppParser(IChatParser):
 
         # Parse time — 12h (AM/PM) or 24h (HH:MM:SS)
         time_str = time_str.strip()
-        if ":" in time_str and time_str.count(":") == 2:
+        if time_str[-1].upper() in ("A", "M", "P"):
+            # 12-hour format: could be H:MM AM/PM or H:MM:SS AM/PM
+            if time_str.count(":") == 2:
+                t = datetime.strptime(time_str, "%I:%M:%S %p")
+            else:
+                t = datetime.strptime(time_str, "%I:%M %p")
+        else:
             # 24-hour format: HH:MM:SS
             t = datetime.strptime(time_str, "%H:%M:%S")
-        else:
-            # 12-hour format: H:MM AM/PM
-            t = datetime.strptime(time_str, "%I:%M %p")
         return datetime(year, month, day, t.hour, t.minute, t.second)
 
     def _detect_format(self, lines: list[str]) -> re.Pattern:
-        """Detect whether the file uses format A (AM/PM) or format B (brackets, 24h)."""
+        """Detect whether the file uses format A, B, or C."""
         for line in lines[:50]:
             if _LINE_RE_A.match(line):
                 return _LINE_RE_A
+            if _LINE_RE_C.match(line):
+                return _LINE_RE_C
             if _LINE_RE_B.match(line):
                 return _LINE_RE_B
         return _LINE_RE_A  # default
